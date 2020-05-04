@@ -2,7 +2,9 @@
 
 A GPU-accelarated Game of Life simulation capable of running very large patterns such as the [digital clock](https://youtu.be/3NDAZ5g4EuU) in real-time. In fact it was this digital clock pattern that inspired me to create this program. The [original post](https://codegolf.stackexchange.com/a/111932) with the clock pattern said:
 
-> .. the only algorithm that makes this huge design useable is hashlife .. with conventional algorithms, it is impractical to even see the hour changing
+> .. the only algorithm that makes this huge design useable is hashlife .. 
+
+> .. with conventional algorithms, it is impractical to even see the hour changing ..
 
 That just rubbed me the wrong way, I had to proove it otherwise. This program does **not** use the complicated [Hashlife](https://conwaylife.com/wiki/HashLife) algorithm. It uses shaders running on the GPU to update the cells in the Game of Life massively in parallel. It takes roughly 3 minutes to see 1 hour changing on the clock when running on a mobile GTX 1050, I would definitely call this _usable_.
 
