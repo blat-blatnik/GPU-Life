@@ -1,4 +1,4 @@
-#ifdef BENCHMARK
+﻿#ifdef BENCHMARK
 #define NDEBUG
 #endif
 
@@ -13,8 +13,8 @@
 
 /* run on a dedicated GPU if avaliable https://stackoverflow.com/a/39047129 */
 #ifdef _MSC_VER
-__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
-__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+//__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+//__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
 GLFWwindow *window;
@@ -61,8 +61,7 @@ const char *vertShaderSource =
 /* this shader uses some tricks to perform sub-pixel rendering when zoomed-in close so the cell
    border doesn't appear jittery, and it also does super-pixel rendering when zoomed-out in a
    very naive way - it just samples every single cell that the fragment covers. the way this is
-   done is quite sub optimal when it comes to performance, but this shader is NOT the bottleneck
-   since the update shader might run ~16 times for every 1 run of this shader.. */
+   done is a bit complicated because we try to avoid texture fetches as much as possible. */
 const char *renderShaderSource = 
 	"#version 130\n"
 	"in vec2 uv;\n"
@@ -79,14 +78,20 @@ const char *renderShaderSource =
 	"	}\n"
 	"	ivec2 pmin = ivec2(fpos - 0.5 * delta);\n"
 	"	ivec2 pmax = ivec2(fpos + 0.5 * delta);\n"
-	"	pmin = max(pmin, 0);\n"
-	"	pmax = min(pmax, numCells - 1);\n"
+	"	pmin = clamp(pmin, ivec2(0), numCells - 1);\n"
+	"	pmax = clamp(pmax, ivec2(0), numCells - 1);\n"
 	"	uint accumulator = 0u;\n"
-	"	for (int x = pmin.x; x <= pmax.x; ++x) {\n"
-	"		for (int y = pmin.y; y <= pmax.y; ++y) {\n"
-	"			uint cellColumn = texelFetch(cells, ivec2(x, y / 32), 0).x;\n"
-	"			accumulator += (cellColumn >> (y % 32)) & 1u;\n"
+	"	int yadvance;\n"
+	"	for (int y = pmin.y; y <= pmax.y; y += yadvance) {\n"
+	"		int ymin = y % 32;"
+	"		int ymax = min(31, pmax.y + ymin - y);"
+	"		int lshift = 31 - ymax;"
+	"		int rshift = ymin + lshift;"
+	"		for (int x = pmin.x; x <= pmax.x; ++x) {\n"
+	"			uint cellColumn = texelFetch(cells, ivec2(x, y / 32), 0).x;"
+	"			accumulator |= (cellColumn << lshift) >> rshift;"
 	"		}\n"
+	"		yadvance = 1 + ymax - ymin;"
 	"	}\n"
 	"	color = vec3(accumulator != 0u ? 1.0 : 0.1);\n"
 	"	if (delta.x < 0.2 && delta.y < 0.2) {\n"
@@ -94,7 +99,6 @@ const char *renderShaderSource =
 	"		vec2 fragMax = fpos + 0.5 * delta;\n"
 	"		vec2 cellMin = floor(fpos) + borderSize;\n"
 	"		vec2 cellMax = ceil (fpos) - borderSize;\n"
-	"		float overlap;\n"
 	"		if (any(lessThan(fragMin, cellMin)) || any(greaterThan(fragMax, cellMax))) {\n"
 	"			vec2 d = max(min(fragMax, cellMax) - max(fragMin, cellMin), 0.0);\n"
 	"			float fragSize = (fragMax.x - fragMin.x) * (fragMax.y - fragMin.y);\n"
@@ -582,7 +586,7 @@ void onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
 			else 
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
 		}break;
-		case GLFW_KEY_SPACE:
+		case GLFW_KEY_ENTER:
 		case GLFW_KEY_PAUSE:
 			isRunning = !isRunning;
 			break;
@@ -617,7 +621,7 @@ void onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
 		case GLFW_KEY_DOWN:
 			offsetY -= scale * scaleY * 0.05f;
 			break;
-		case GLFW_KEY_ENTER:
+		case GLFW_KEY_SPACE:
 		case GLFW_KEY_KP_ENTER:
 		case GLFW_KEY_PERIOD:
 		case GLFW_KEY_TAB:
