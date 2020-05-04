@@ -1,5 +1,3 @@
-﻿/* written by Blat Blatnik, May 2020 */
-
 #ifdef BENCHMARK
 #define NDEBUG
 #endif
