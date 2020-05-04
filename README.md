@@ -6,7 +6,7 @@ A GPU-accelarated Game of Life simulation capable of running very large patterns
 
 > .. with conventional algorithms, it is impractical to even see the hour changing ..
 
-And that just rubbed me the wrong way, I had to proove otherwise. This program does **not** use the complicated [Hashlife](https://conwaylife.com/wiki/HashLife) algorithm. It uses shaders running on the GPU to update the cells in the Game of Life massively in parallel. It takes roughly 3 minutes to see 1 hour changing on the clock when running on a mobile GTX 1050, I would definitely call this _usable_.
+And that just rubbed me the wrong way, I had to proove otherwise. This program does **not** use the complicated [Hashlife](https://conwaylife.com/wiki/HashLife) algorithm. It runs the conventional algorithm on the GPU using GLSL shaders, and it takes roughly 3 minutes to see 1 hour changing on the clock when running on a mobile GTX 1050. I would definitely call this _usable_.
 
 ![digital clock]()
 
