@@ -6,7 +6,7 @@ A GPU-accelarated Game of Life simulation capable of running very large patterns
 
 > .. with conventional algorithms, it is impractical to even see the hour changing ..
 
-That just rubbed me the wrong way, I had to proove it otherwise. This program does **not** use the complicated [Hashlife](https://conwaylife.com/wiki/HashLife) algorithm. It uses shaders running on the GPU to update the cells in the Game of Life massively in parallel. It takes roughly 3 minutes to see 1 hour changing on the clock when running on a mobile GTX 1050, I would definitely call this _usable_.
+And that just rubbed me the wrong way, I had to proove otherwise. This program does **not** use the complicated [Hashlife](https://conwaylife.com/wiki/HashLife) algorithm. It uses shaders running on the GPU to update the cells in the Game of Life massively in parallel. It takes roughly 3 minutes to see 1 hour changing on the clock when running on a mobile GTX 1050, I would definitely call this _usable_.
 
 ![digital clock]()
 
@@ -104,3 +104,5 @@ The final version of the program takes 3.2 seconds to simulate 11'520 generation
 ## Licence
 
 This software and all related code are in the public domain - you can do whatever you want with them, no strings attached :)
+
+Credit goes to the stack-exchange user [dim](https://codegolf.stackexchange.com/users/64412/dim) for making this awesome pattern, and to [Joe Z.](https://codegolf.stackexchange.com/users/7110/joe-z) for coming up with the chanllenge.
