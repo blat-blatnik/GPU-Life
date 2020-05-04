@@ -414,6 +414,16 @@ void setCells(uint8_t *cells, int width, int height) {
 	centerCellsOnScreen();
 }
 
+void clearCells() {
+	setPatternName("unnamed pattern");
+	glBindFramebuffer(GL_FRAMEBUFFER, cellsReadFramebuffer);
+	/* this seems to work - even though the format is unsigned 
+	   integer and not floating point.. should look into glClearBuffer */
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	generation = 0;
+}
+
 void onGlfwError(int code, const char *desc) {
 	printf("GLFW error 0x%X: %s\n", code, desc);
 }
@@ -544,7 +554,6 @@ void onMouseWheel(GLFWwindow *window, double dX, double dY) {
 			scale = fminf(scale * 1.1f, 10.0f);
 		offsetX = centerX - mX * scaleX * scale;
 		offsetY = centerY - mY * scaleY * scale;
-		printf("%lg\n", scale);
 	} else {
 		if (dY > 0) {
 			if (framesPerUpdate > 1)
@@ -630,13 +639,7 @@ void onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
 		} break;
 		case GLFW_KEY_BACKSPACE:
 		case GLFW_KEY_DELETE:
-			setPatternName("unnamed pattern");
-			glBindFramebuffer(GL_FRAMEBUFFER, cellsReadFramebuffer);
-			/* this seems to work - even though the format is unsigned 
-			   integer and not floating point.. look into glClearBuffer */
-			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			generation = 0;
+			clearCells();
 			break;
 		default: break;
 	}
@@ -695,13 +698,6 @@ void onFileDragNDrop(GLFWwindow *window, int numFiles, const char **files) {
 		setCells(cells, width, height);
 		free(cells);
 		printf("done\n");
-		return;
-	}
-
-	/* plaintext file (.cells) */
-	fseek(f, 0, SEEK_SET);
-	if (1 == fscanf(f, " !Name:%c", &ignored)) {
-		printf("plaintext life files are not supported\n");
 		return;
 	}
 
@@ -907,7 +903,7 @@ int main(void) {
 	cellsWriteFramebuffer = createFramebuffer(cellsWrite);
 	glCheckErrors();
 
-	setPatternName("unnamed pattern");
+	clearCells();
 	centerCellsOnScreen();
 
 #ifdef BENCHMARK
