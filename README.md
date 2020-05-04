@@ -1,6 +1,6 @@
 # GPU-Life
 
-A GPU-accelarated Game of Life simulation capable of running very large patterns such as the [digital clock](https://youtu.be/3NDAZ5g4EuU) in real-time. In fact it was this digital clock pattern that inspired me to create this program. The [original post](https://codegolf.stackexchange.com/a/111932) with the clock pattern said:
+A GPU-accelarated Game of Life simulation capable of running very large patterns such as the [digital clock](https://youtu.be/3NDAZ5g4EuU) in real-time. In fact it was this digital clock pattern that inspired me to create this program. The [original author](https://codegolf.stackexchange.com/a/111932) of the clock pattern said:
 
 > .. the only algorithm that makes this huge design useable is hashlife .. 
 
