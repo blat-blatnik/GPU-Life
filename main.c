@@ -13,8 +13,8 @@
 
 /* run on a dedicated GPU if avaliable https://stackoverflow.com/a/39047129 */
 #ifdef _MSC_VER
-//__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
-//__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
 GLFWwindow *window;
