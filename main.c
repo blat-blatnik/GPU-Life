@@ -47,6 +47,7 @@ GLint uniformScale;
 GLint uniformOffset;
 GLint uniformBorderSize;
 
+/* the vertex shader is shared between the render and update shaders */
 const char *vertShaderSource =
 	"#version 130\n"
 	"in vec2 position;\n"
@@ -59,20 +60,25 @@ const char *vertShaderSource =
 	"	gl_Position = vec4(position, 0.0, 1.0);\n"
 	"}";
 
-const char *fragShaderSource = 
+/* this shader uses some tricks to perform sub-pixel rendering when zoomed-in close so the cell
+   border doesn't appear jittery, and it also does super-pixel rendering when zoomed-out in a
+   very naive way - it just samples every single cell that the fragment covers. the way this is
+   done is quite sub optimal when it comes to performance, but this shader is NOT the bottleneck
+   since the update shader might run ~16 times for every 1 run of this shader.. */
+const char *renderShaderSource = 
 	"#version 130\n"
 	"in vec2 uv;\n"
 	"out vec3 color;\n"
 	"uniform usampler2D cells;\n"
 	"uniform float borderSize = 0.1;\n"
 	"void main() {\n"
+	"	ivec2 numCells = textureSize(cells, 0) * ivec2(1, 32);\n"
+	"	vec2 fpos = uv * vec2(numCells);\n"
+	"	vec2 delta = abs(vec2(dFdx(fpos.x), dFdy(fpos.y)));\n"
 	"	if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) {\n"
 	"		color = vec3(0);\n"
 	"		return;\n"
 	"	}\n"
-	"	ivec2 numCells = textureSize(cells, 0) * ivec2(1, 32);\n"
-	"	vec2 fpos = uv * vec2(numCells);\n"
-	"	vec2 delta = abs(vec2(dFdx(fpos.x), dFdy(fpos.y)));\n"
 	"	ivec2 pmin = ivec2(fpos - 0.5 * delta);\n"
 	"	ivec2 pmax = ivec2(fpos + 0.5 * delta);\n"
 	"	pmin = max(pmin, 0);\n"
@@ -90,10 +96,13 @@ const char *fragShaderSource =
 	"		vec2 fragMax = fpos + 0.5 * delta;\n"
 	"		vec2 cellMin = floor(fpos) + borderSize;\n"
 	"		vec2 cellMax = ceil (fpos) - borderSize;\n"
-	"		vec2 d = max(min(fragMax, cellMax) - max(fragMin, cellMin), 0.0);\n"
-	"		float overlap = d.x * d.y;\n"
-	"		float fragSize = (fragMax.x - fragMin.x) * (fragMax.y - fragMin.y);\n"
-	"		color = mix(vec3(0.1), color, overlap / fragSize);\n"
+	"		float overlap;\n"
+	"		if (any(lessThan(fragMin, cellMin)) || any(greaterThan(fragMax, cellMax))) {\n"
+	"			vec2 d = max(min(fragMax, cellMax) - max(fragMin, cellMin), 0.0);\n"
+	"			float fragSize = (fragMax.x - fragMin.x) * (fragMax.y - fragMin.y);\n"
+	"			float overlap = d.x * d.y / fragSize;\n"
+	"			color = mix(vec3(0.1), color, clamp(overlap, 0.0, 1.0));\n"
+	"		}\n"
 	"	}\n"
 	"}";
 
@@ -528,12 +537,14 @@ void onMouseWheel(GLFWwindow *window, double dX, double dY) {
 		float mY = (float)(mouseY / windowHeight);
 		float centerX = offsetX + mX * scaleX * scale;
 		float centerY = offsetY + mY * scaleY * scale;
+		/* we get visible rendering glitches with very small scales so we need to clamp */
 		if (dY > 0)
-			scale /= 1.1f;
+			scale = fmaxf(scale / 1.1f, 0.0001f);
 		else if (dY < 0)
-			scale *= 1.1f;
+			scale = fminf(scale * 1.1f, 10.0f);
 		offsetX = centerX - mX * scaleX * scale;
 		offsetY = centerY - mY * scaleY * scale;
+		printf("%lg\n", scale);
 	} else {
 		if (dY > 0) {
 			if (framesPerUpdate > 1)
@@ -844,7 +855,7 @@ int main(void) {
 	mouseY = (double)windowHeight - mouseY;
 
 	GLuint vertShader = compileShader(GL_VERTEX_SHADER, vertShaderSource);
-	GLuint fragShader = compileShader(GL_FRAGMENT_SHADER, fragShaderSource);
+	GLuint fragShader = compileShader(GL_FRAGMENT_SHADER, renderShaderSource);
 	GLuint updateShader = compileShader(GL_FRAGMENT_SHADER, updateShaderSource);
 
 	GLuint renderShaders[2];
