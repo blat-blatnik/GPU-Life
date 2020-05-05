@@ -17,10 +17,12 @@ And that just rubbed me the wrong way, I had to prove otherwise. This program do
 - arbitrary world sizes, side-lengths must be a multiple of 32 and are rounded up
 - arbitrary update rates
 - wrap-around world
+- sub-pixel rendering
 - cross platform
 - should work on 2005+ hardware
 - patterns are rendered in real time
 - modify patterns in real time
+- light _and_ dark themes!
 - load patterns from [.rle](https://www.conwaylife.com/wiki/Run_Length_Encoded), [.life](https://www.conwaylife.com/wiki/Life_1.06), or image files
 
 <p align="center">
@@ -57,7 +59,7 @@ Simply run the compiled executable. If for whatever reason you don't want to com
 
 ### Controls
 
- key                |    effect
+ key                |    effect |
 :-----------------: | :----------
 `left-click`        | place cell
 `right-click`       | remove cell
@@ -66,11 +68,11 @@ Simply run the compiled executable. If for whatever reason you don't want to com
 `enter`             | play/pause
 `scroll`            | faster/slower
 `ALT + drag`        | pan view
-`arrows`            | pan view
 `ALT + scroll`      | zoom in/out
-`+`/`-`             | zoom in/out
 `C`                 | center view
 `delete`            | clear all cells
+`D`/`L`             | dark/light theme
+`B`                 | toggle cell border
 `F`                 | toggle fullscreen
 `V`                 | toggle vsync
 `ESC`               | quit program
@@ -84,22 +86,42 @@ This program uses the simplest, conventional Game of Life algorithm, in which ce
 ```python
 for x in [0, num-cells-x):
   for y in [0, num-cells-y):
-    old-cell = old-cells[x][y]
     live-count = 0
     for dx in [x-1, x+1]:
       for dy in [y-1, y+1]:
         live-count += old-cells[dx][dy]
+    old-cell = old-cells[x][y]
     new-cells[x][y] =
       1        | if live-count == 3,
       old-cell | if live-count == 4,
       0        | otherwise
 ```
 
-The algorithm used here is a heavily optimized version of this basic algorithm running massively in parallel on the GPU. The main difference is that instead of storing every cell in a separate array entry, entire columns of 32 cells are stored in each array entry, and so the array has dimensions `num-cells-x` × `num-cells-y/32`. This heavily reduces the memory usage: only 2-bits per cell are used, since an additional bit is needed for the back buffer. This also allows us to update an entire column of 32 cells at once, instead of updating each cell individually. This is done by using bitwise operations to calculate the neighbor count for every one of the 32 cells in a column.
+The algorithm used here is variation of this basic algorithm running massively in parallel on the GPU. Instead of storing every cell in a separate array entry, entire columns of 32 cells are stored in each array entry, and so the array has dimensions `num-cells-x` × `num-cells-y/32`. This heavily reduces the memory usage: each cell is represented by only a single bit, leading to significantly improved cache utilization. This also allows us to update an entire column of 32 cells at once, instead of updating each cell individually.
 
 <p align="center">
   <img src="./examples/diagram.png">
 </p>
+
+The diagram above illustrates how the neighbor count can be calculated for a column cells stored in an 8-bit machine word. Although we actually use 32-bit words in reality, the general idea is the same. First, the neighboring _columns_ are fetched. Then, every triplet of horizontal neighbors is added together to produce three 2 binary digit-numbers. Adding together three binary digits, `a`, `b`, and `c`, produces a two digit result `r1r0` like so:
+
+```csharp
+r0 = a ^ b ^ c
+r1 = (a & b) | (b & c) | (c & a)
+```
+
+We've now calculated the number of _horizontal_ neighbors, but we've still to account for the _vertical_ neighbors. This is done in the next two steps. First, the two digit horizontal sum is replicated 3 times, and 2 of those replicas are bit shifted - one to the left by 1 bit, and the other to the right by 1 bit. Normally when bit shifting, zeros are shifted in, but we don't want this. What we want instead is to shift in the values from the neighboring horizontal sums. 
+
+Now that we've interleaved the sums, we can calculate the final neighbor count for each cell by doing another horizontal sum. This time we are adding three 2-digit numbers `a1a0`, `b1b0`, and `c1c0`, and we are only interested in the 3 least significant bits of the result, `r2r1r0`. This can be calculated using bitwise operations like this:
+
+```csharp
+rc = (a0 & b0) | (b0 & c0) | (c0 & a0) // carry
+r0 = a0 ^ b0 ^ c0
+r1 = a1 ^ b1 ^ c1 ^ rc
+r2 = ((a1 & (b1 | rc)) | (b1 & (c1 | rc)) (c1 & (a1 | rc))) & ~(a1 & b1 & c1 & rc)
+```
+
+And from here, we can easily calculate the next cell state.
 
 ## Optimization
 
