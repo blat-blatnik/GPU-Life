@@ -123,11 +123,17 @@ r2 = ((a1 & (b1 | rc)) | (b1 & (c1 | rc)) (c1 & (a1 | rc))) & ~(a1 & b1 & c1 & r
 
 And from here, we can easily calculate the next cell state.
 
-## Optimization
+## Further Optimization
 
 The goal of this program is to be able to run the [digital clock pattern](https://codegolf.stackexchange.com/a/111932) in real time, so the first thing I did after implementing the most basic version of the simple algorithm is write a benchmark for this purpose. The pattern consists of a 10'016 × 6'796 cell world, and has a period of 11'520 generations per clock minute. So, this was the benchmark, how long does it take to simulate 11'520 generations of the clock count. In particular, rendering time was not taken into account here as the pattern was only rendered once at the end.
 
 The final version of the program takes 3.2 seconds to simulate 11'520 generations.
+
+At this point, the program is entirely bound by access to global memory. When I replaced the update shader with a shader than doesn't do any computation at all and just writes out a sum of all neigboring cells, the performance of the program was identical. The memory access is already coallesced, so it seems like there is nothing else that can be done to help this problem in a fragment shader.
+
+If we were to step up to using compute shaders, then something could maybe be done about the global memory bottleneck. We could utilize the shared memory cache on the GPU multiprocessors to cache an entire block of cell columns in order to reduce the number of memory accesses when fetching neighboring cells. This would require a small modification to the algorithm so that it can process blocks of several cell columns at a time, but it probably wouldn't be too difficult.
+
+For the time being though I have decided against using compute shaders in this project, so this is only something to consider for the future. 
 
 ## Licence
 
