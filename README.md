@@ -99,9 +99,6 @@ for x in [0, num-cells-x):
 
 The algorithm used here is variation of this basic algorithm running massively in parallel on the GPU. Instead of storing every cell in a separate array entry, entire columns of 32 cells are stored in each array entry, and so the array has dimensions `num-cells-x` × `num-cells-y/32`. This heavily reduces the memory usage: each cell is represented by only a single bit, leading to significantly improved cache utilization. This also allows us to update an entire column of 32 cells at once, instead of updating each cell individually.
 
-<p align="center">
-  <img src="./examples/diagram.png">
-</p>
 
 The diagram above illustrates how the neighbor count can be calculated for a column cells stored in an 8-bit machine word. Although we actually use 32-bit words in reality, the general idea is the same. First, the neighboring _columns_ are fetched. Then, every triplet of horizontal neighbors is added together to produce three 2 binary digit-numbers. Adding together three binary digits, `a`, `b`, and `c`, produces a two digit result `r1r0` like so:
 
