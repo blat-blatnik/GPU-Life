@@ -34,6 +34,9 @@ int updatesPerFrame = 1;
 int framesPerUpdate = 1;
 int generation;
 char *patternName;
+float backgroundColor = 0.0f;
+float deadColor       = 0.1f;
+float aliveColor      = 1.0f;
 GLint maxTextureSize;
 GLuint cellsRead;
 GLuint cellsWrite;
@@ -44,6 +47,9 @@ GLuint updateProgram;
 GLint uniformScale;
 GLint uniformOffset;
 GLint uniformBorderSize;
+GLint uniformBackgroundColor;
+GLint uniformDeadColor;
+GLint uniformAliveColor;
 
 /* the vertex shader is shared between the render and update shaders */
 const char *vertShaderSource =
@@ -68,12 +74,15 @@ const char *renderShaderSource =
 	"out vec3 color;\n"
 	"uniform usampler2D cells;\n"
 	"uniform float borderSize = 0.1;\n"
+	"uniform float backgroundColor;\n"
+	"uniform float deadColor;\n"
+	"uniform float aliveColor;\n"
 	"void main() {\n"
 	"	ivec2 numCells = textureSize(cells, 0) * ivec2(1, 32);\n"
 	"	vec2 fpos = uv * vec2(numCells);\n"
 	"	vec2 delta = abs(vec2(dFdx(fpos.x), dFdy(fpos.y)));\n"
 	"	if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) {\n"
-	"		color = vec3(0);\n"
+	"		color = vec3(backgroundColor);\n"
 	"		return;\n"
 	"	}\n"
 	"	ivec2 pmin = ivec2(fpos - 0.5 * delta);\n"
@@ -93,7 +102,7 @@ const char *renderShaderSource =
 	"		}\n"
 	"		yadvance = 1 + ymax - ymin;"
 	"	}\n"
-	"	color = vec3(accumulator != 0u ? 1.0 : 0.1);\n"
+	"	color = vec3(accumulator != 0u ? aliveColor : deadColor);\n"
 	"	if (delta.x < 0.2 && delta.y < 0.2) {\n"
 	"		vec2 fragMin = fpos - 0.5 * delta;\n"
 	"		vec2 fragMax = fpos + 0.5 * delta;\n"
@@ -103,7 +112,7 @@ const char *renderShaderSource =
 	"			vec2 d = max(min(fragMax, cellMax) - max(fragMin, cellMin), 0.0);\n"
 	"			float fragSize = (fragMax.x - fragMin.x) * (fragMax.y - fragMin.y);\n"
 	"			float overlap = d.x * d.y / fragSize;\n"
-	"			color = mix(vec3(0.1), color, clamp(overlap, 0.0, 1.0));\n"
+	"			color = mix(vec3(deadColor), color, clamp(overlap, 0.0, 1.0));\n"
 	"		}\n"
 	"	}\n"
 	"}";
@@ -343,6 +352,9 @@ void renderCells(void) {
 	glUniform2f(uniformScale, scale * scaleX, scale * scaleY);
 	glUniform2f(uniformOffset, offsetX, offsetY);
 	glUniform1f(uniformBorderSize, cellBorderIsOn ? 0.1f : -0.1f);
+	glUniform1f(uniformBackgroundColor, backgroundColor);
+	glUniform1f(uniformDeadColor, deadColor);
+	glUniform1f(uniformAliveColor, aliveColor);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glCheckErrors();
 }
@@ -621,6 +633,16 @@ void onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
 		case GLFW_KEY_DOWN:
 			offsetY -= scale * scaleY * 0.05f;
 			break;
+		case GLFW_KEY_L:
+			backgroundColor = 0.9f;
+			deadColor = 1.0f;
+			aliveColor = 0.0f;
+			break;
+		case GLFW_KEY_D:
+			backgroundColor = 0.0f;
+			deadColor = 0.1f;
+			aliveColor = 1.0f;
+			break;
 		case GLFW_KEY_SPACE:
 		case GLFW_KEY_KP_ENTER:
 		case GLFW_KEY_PERIOD:
@@ -868,6 +890,9 @@ int main(void) {
 	uniformScale = glGetUniformLocation(renderProgram, "scale");
 	uniformOffset = glGetUniformLocation(renderProgram, "offset");
 	uniformBorderSize = glGetUniformLocation(renderProgram, "borderSize");
+	uniformBackgroundColor = glGetUniformLocation(renderProgram, "backgroundColor");
+	uniformDeadColor = glGetUniformLocation(renderProgram, "deadColor");
+	uniformAliveColor = glGetUniformLocation(renderProgram, "aliveColor");
 
 	glDeleteShader(vertShader);
 	glDeleteShader(fragShader);
