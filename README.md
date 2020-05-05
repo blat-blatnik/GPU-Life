@@ -6,9 +6,11 @@ A GPU-accelarated Game of Life simulation capable of running very large patterns
 
 > .. with conventional algorithms, it is impractical to even see the hour changing ..
 
-And that just rubbed me the wrong way, I had to proove otherwise. This program does **not** use the complicated [Hashlife](https://conwaylife.com/wiki/HashLife) algorithm. It runs the conventional algorithm on the GPU using GLSL shaders, and it takes roughly 3 minutes to see 1 hour changing on the clock when running on a mobile GTX 1050. I would definitely call this _usable_.
+And that just rubbed me the wrong way, I had to prove otherwise. This program does **not** use the complicated [hashlife](https://conwaylife.com/wiki/HashLife) algorithm. It runs the conventional algorithm on the GPU using GLSL shaders, and it takes roughly 3 minutes to see 1 hour changing on the clock when running on a mobile GTX 1050. I would definitely call that _usable_.. pfff.
 
-![digital clock]()
+<p align="center">
+  <img src="./examples/clock.gif">
+</p>
 
 ## Features
 
@@ -21,7 +23,9 @@ And that just rubbed me the wrong way, I had to proove otherwise. This program d
 - modify patterns in real time
 - load patterns from [.rle](https://www.conwaylife.com/wiki/Run_Length_Encoded), [.life](https://www.conwaylife.com/wiki/Life_1.06), or image files
 
-![image load example]()
+<p align="center">
+  <img src="./examples/image-load.png">
+</p>
 
 ## Requirements
 
@@ -93,7 +97,9 @@ for x in [0, num-cells-x):
 
 The algorithm used here is a heavily optimized version of this basic algorithm running massively in parallel on the GPU. The main difference is that instead of storing every cell in a separate array entry, entire columns of 32 cells are stored in each array entry, and so the array has dimensions `num-cells-x` × `num-cells-y/32`. This heavily reduces the memory usage: only 2-bits per cell are used, since an additional bit is needed for the back buffer. This also allows us to update an entire column of 32 cells at once, instead of updating each cell individually. This is done by using bitwise operations to calculate the neighbor count for every one of the 32 cells in a column.
 
-![diagram]()
+<p align="center">
+  <img src="./examples/diagram.png">
+</p>
 
 ## Optimization
 
@@ -103,6 +109,6 @@ The final version of the program takes 3.2 seconds to simulate 11'520 generation
 
 ## Licence
 
-This software and all related code are in the public domain - you can do whatever you want with them, no strings attached :)
+This software and its source code are in the public domain - you can do whatever you want with them, no strings attached :)
 
-Credit goes to the stack-exchange user [dim](https://codegolf.stackexchange.com/users/64412/dim) for making this awesome pattern, and to [Joe Z.](https://codegolf.stackexchange.com/users/7110/joe-z) for coming up with the chanllenge.
+Credit goes to the stack-exchange user [dim](https://codegolf.stackexchange.com/users/64412/dim) for making the awesome digital-clock pattern, and to [Joe Z.](https://codegolf.stackexchange.com/users/7110/joe-z) for posting his challenge.
