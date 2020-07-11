@@ -59,23 +59,23 @@ Simply run the compiled executable. If for whatever reason you don't want to com
 
 ### Controls
 
- key                |    effect |
-:-----------------: | :----------
-`left-click`        | place cell
-`right-click`       | remove cell
-`drag-and-drop`     | load pattern from [file](https://www.conwaylife.com/wiki/Category:File_formats)
-`space`             | single step
-`enter`             | play/pause
-`scroll`            | faster/slower
-`ALT + drag`        | pan view
-`ALT + scroll`      | zoom in/out
-`C`                 | center view
-`delete`            | clear all cells
-`D`/`L`             | dark/light theme
-`B`                 | toggle cell border
-`F`                 | toggle fullscreen
-`V`                 | toggle vsync
-`ESC`               | quit program
+| key                                     |    effect |
+|:---------------------------------------:| :----------
+|<kbd>Left-click</kbd>                    | place cell
+|<kbd>Right-click</kbd>                   | remove cell
+|<kbd>Drag-and-drop</kbd>                 | load pattern from [file](https://www.conwaylife.com/wiki/Category:File_formats)
+|<kbd>SPACE</kbd>                         | single step
+|<kbd>ENTER</kbd>                         | play/pause
+|<kbd>Scroll-wheel</kbd>                  | faster/slower
+|<kbd>ALT</kbd>+<kbd>Click-drag</kbd>     | pan view
+|<kbd>ALT</kbd>+<kbd>Scroll-wheel</kbd>   | zoom in/out
+|<kbd>C</kbd>                             | center view
+|<kbd>DELETE</kbd>                        | clear all cells
+|<kbd>D`/`L</kbd>                         | dark/light theme
+|<kbd>B</kbd>                             | toggle cell border
+|<kbd>F</kbd>                             | toggle fullscreen
+|<kbd>V</kbd>                             | toggle vsync
+|<kbd>ESC</kbd>                           | quit program
 
 The window title show the currently loaded pattern, as well as the current update rate, and FPS. Updates occur on a per-frame basis, so you can change the number of updates that happen each frame.
 
