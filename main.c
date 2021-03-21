@@ -656,10 +656,11 @@ void onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
 			GLFWmonitor *primaryMonitor = glfwGetPrimaryMonitor();
 			int width, height;
 			glfwGetMonitorWorkarea(primaryMonitor, NULL, NULL, &width, &height);
+			const GLFWvidmode *mode = glfwGetVideoMode(primaryMonitor);
 			if (!monitor)
-				glfwSetWindowMonitor(window, primaryMonitor, 0, 0, width, height, 60);
+				glfwSetWindowMonitor(window, primaryMonitor, 0, 0, width, height, mode->refreshRate);
 			else
-				glfwSetWindowMonitor(window, NULL, (width - 1280) / 2, (height - 720) / 2, 1280, 720, 60);
+				glfwSetWindowMonitor(window, NULL, (width - 1280) / 2, (height - 720) / 2, 1280, 720, mode->refreshRate);
 		} break;
 		case GLFW_KEY_BACKSPACE:
 		case GLFW_KEY_DELETE:
@@ -669,7 +670,7 @@ void onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
 	}
 }
 
-void onFileDragNDrop(GLFWwindow *window, int numFiles, const char **files) {
+void onFileDragAndDrop(GLFWwindow *window, int numFiles, const char **files) {
 
 	const char *file = files[0];
 	FILE *f = fopen(file, "rt");
@@ -868,7 +869,7 @@ int main(void) {
 	glfwSetMouseButtonCallback(window, onMouseButton);
 	glfwSetCursorPosCallback(window, onMouseMove);
 	glfwSetScrollCallback(window, onMouseWheel);
-	glfwSetDropCallback(window, onFileDragNDrop);
+	glfwSetDropCallback(window, onFileDragAndDrop);
 
 	glfwGetCursorPos(window, &mouseX, &mouseY);
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
@@ -935,7 +936,7 @@ int main(void) {
 
 #ifdef BENCHMARK
 	const char *benchFile = "digital-clock.rle";
-	onFileDragNDrop(window, 1, &benchFile);
+	onFileDragAndDrop(window, 1, &benchFile);
 	int benchCellsX = numCellsX;
 	int benchCellsY = numCellsY;
 	vsyncIsOn = 0;
